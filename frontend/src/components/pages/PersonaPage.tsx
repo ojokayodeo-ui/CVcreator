@@ -9,12 +9,13 @@ export default function PersonaPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [persona, setPersona] = useState<any>({});
+  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
-    getPersona().then((r) => {
-      setPersona(r.data);
-      setStep("saved");
-    }).catch(() => {});
+    getPersona()
+      .then((r) => { setPersona(r.data); setStep("saved"); })
+      .catch(() => {})
+      .finally(() => setInitialLoading(false));
   }, []);
 
   const onDrop = useCallback(async (files: File[]) => {
@@ -50,6 +51,8 @@ export default function PersonaPage() {
       setSaving(false);
     }
   }
+
+  if (initialLoading) return <div className="text-slate-400 text-sm">Loading your profile...</div>;
 
   if (step === "upload" || step === "saved") {
     return (

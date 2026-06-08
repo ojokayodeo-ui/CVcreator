@@ -1,12 +1,25 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .core.config import get_settings
 from .api.routes import auth, cv, jobs, drive, download
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Ensure Playwright Chromium is installed on cold-start
+    import subprocess, sys
+    subprocess.run(
+        [sys.executable, "-m", "playwright", "install", "chromium"],
+        check=False, capture_output=True,
+    )
+    yield
+
 app = FastAPI(
     title="AI Job Application Engine",
     description="Generate tailored CVs, cover letters and job-winning strategies",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 settings = get_settings()

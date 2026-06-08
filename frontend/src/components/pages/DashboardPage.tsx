@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { generateDocuments, downloadCV, downloadCoverLetter, triggerDownload } from "../../services/api";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   BriefcaseIcon, SparklesIcon, DownloadIcon, AlertCircleIcon,
   CheckCircleIcon, TrendingUpIcon, MessageSquareIcon, MapIcon,
@@ -169,8 +170,8 @@ export default function DashboardPage() {
           {/* Tab content */}
           <div className="card p-6">
             {(activeTab === "cv" || activeTab === "cover") && (
-              <div className="prose prose-sm max-w-none">
-                <ReactMarkdown>
+              <div className="prose prose-slate prose-sm max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {activeTab === "cv" ? result.optimised_cv : result.cover_letter}
                 </ReactMarkdown>
               </div>
@@ -233,8 +234,8 @@ export default function DashboardPage() {
 
             {activeTab === "strategy" && (
               <div className="space-y-6">
-                <div className="prose prose-sm max-w-none">
-                  <ReactMarkdown>{result.strategy_plan}</ReactMarkdown>
+                <div className="prose prose-slate prose-sm max-w-none">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{result.strategy_plan}</ReactMarkdown>
                 </div>
                 {result.interview_stages?.length > 0 && (
                   <div>

@@ -88,12 +88,10 @@ async def generate_documents(
         tasks.append(generate_strategy(persona, job_data, match))
 
     results = await asyncio.gather(*tasks)
-    idx = 0
-    optimised_cv = results[idx] if payload.generate_cv else ""
-    idx += 1 if payload.generate_cv else 0
-    cover_letter = results[idx] if payload.generate_cover_letter else ""
-    idx += 1 if payload.generate_cover_letter else 0
-    strategy_data = results[idx] if payload.generate_strategy else {}
+    result_iter = iter(results)
+    optimised_cv = next(result_iter) if payload.generate_cv else ""
+    cover_letter = next(result_iter) if payload.generate_cover_letter else ""
+    strategy_data = next(result_iter) if payload.generate_strategy else {}
 
     drive_url = None
     if payload.save_to_drive:

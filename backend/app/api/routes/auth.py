@@ -26,7 +26,7 @@ async def register(payload: UserRegister):
 
 @router.post("/login", response_model=TokenResponse)
 async def login(payload: UserLogin):
-    result = db = get_db()
+    db = get_db()
     result = db.table("users").select("id,password_hash").eq("email", payload.email).execute()
     if not result.data:
         raise HTTPException(status_code=401, detail="Invalid credentials")

@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { logout, isAuthenticated } from "../../store/authStore";
-import { BriefcaseIcon, UserIcon, HistoryIcon, LogOutIcon, SparklesIcon } from "lucide-react";
+import { BriefcaseIcon, UserIcon, HistoryIcon, LogOutIcon, SparklesIcon, SettingsIcon } from "lucide-react";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
@@ -39,6 +39,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               {navItem("/dashboard", "Generate", BriefcaseIcon)}
               {navItem("/persona", "My Persona", UserIcon)}
               {navItem("/history", "History", HistoryIcon)}
+              {navItem("/settings", "Settings", SettingsIcon)}
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors"

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { getHistoryItem, downloadCV, downloadCoverLetter, triggerDownload } from "../../services/api";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { DownloadIcon, ArrowLeftIcon } from "lucide-react";
 
 export default function HistoryDetailPage() {
@@ -44,8 +45,8 @@ export default function HistoryDetailPage() {
         ))}
       </div>
 
-      <div className="card p-6 prose prose-sm max-w-none">
-        <ReactMarkdown>
+      <div className="card p-6 prose prose-slate prose-sm max-w-none">
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>
           {activeTab === "cv" ? item.outputs?.optimised_cv : activeTab === "cover" ? item.outputs?.cover_letter : item.outputs?.strategy_plan}
         </ReactMarkdown>
       </div>
