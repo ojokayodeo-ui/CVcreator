@@ -1,6 +1,6 @@
 import json
 import re
-from openai import AsyncOpenAI
+from anthropic import AsyncAnthropic
 from ..core.config import get_settings
 from ..prompts.persona import PERSONA_EXTRACTION_PROMPT
 from ..prompts.job_analysis import JOB_ANALYSIS_PROMPT, MATCH_ANALYSIS_PROMPT
@@ -8,27 +8,33 @@ from ..prompts.cv_optimisation import CV_OPTIMISATION_PROMPT
 from ..prompts.cover_letter import COVER_LETTER_PROMPT
 from ..prompts.strategy import STRATEGY_PROMPT
 
-_client: AsyncOpenAI | None = None
+_client: AsyncAnthropic | None = None
 
 
-def get_ai_client() -> AsyncOpenAI:
+def get_ai_client() -> AsyncAnthropic:
     global _client
     if _client is None:
-        _client = AsyncOpenAI(api_key=get_settings().openai_api_key)
+        _client = AsyncAnthropic(api_key=get_settings().anthropic_api_key)
     return _client
 
 
 async def _chat(prompt: str, json_mode: bool = False) -> str:
     client = get_ai_client()
-    kwargs = dict(
-        model=get_settings().openai_model,
+    settings = get_settings()
+    system = "You are an expert career advisor and professional CV writer. Always respond with valid JSON when asked." if json_mode else "You are an expert career advisor and professional CV writer."
+    response = await client.messages.create(
+        model=settings.anthropic_model,
+        max_tokens=4096,
+        thinking={"type": "adaptive"},
+        system=system,
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.3,
     )
-    if json_mode:
-        kwargs["response_format"] = {"type": "json_object"}
-    response = await client.chat.completions.create(**kwargs)
-    return response.choices[0].message.content.strip()
+    # Extract text from response content blocks
+    text = next(
+        (block.text for block in response.content if hasattr(block, "text")),
+        "",
+    )
+    return text.strip()
 
 
 def _parse_json(text: str) -> dict:

@@ -3,8 +3,8 @@ from functools import lru_cache
 
 
 class Settings(BaseSettings):
-    openai_api_key: str
-    openai_model: str = "gpt-4o"
+    anthropic_api_key: str
+    anthropic_model: str = "claude-opus-4-8"
 
     supabase_url: str
     supabase_anon_key: str
