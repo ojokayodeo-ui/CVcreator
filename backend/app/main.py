@@ -2,7 +2,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .core.config import get_settings
-from .api.routes import auth, cv, jobs, drive, download
+from .core.database import get_db
+from .api.deps import SINGLE_USER_ID
+from .api.routes import cv, jobs, drive, download
 
 
 @asynccontextmanager
@@ -13,6 +15,15 @@ async def lifespan(app: FastAPI):
         [sys.executable, "-m", "playwright", "install", "chromium"],
         check=False, capture_output=True,
     )
+
+    # Ensure the single app user exists (satisfies FK constraints on personas/history)
+    get_db().table("users").upsert({
+        "id": SINGLE_USER_ID,
+        "email": "me@local",
+        "full_name": "Me",
+        "password_hash": "",
+    }).execute()
+
     yield
 
 app = FastAPI(
@@ -32,7 +43,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth.router)
 app.include_router(cv.router)
 app.include_router(jobs.router)
 app.include_router(drive.router)

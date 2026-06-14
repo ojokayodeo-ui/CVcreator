@@ -4,20 +4,6 @@ const BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 export const api = axios.create({ baseURL: BASE_URL });
 
-// Attach JWT on every request
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
-
-// Auth
-export const register = (data: { email: string; password: string; full_name: string }) =>
-  api.post("/auth/register", data);
-
-export const login = (data: { email: string; password: string }) =>
-  api.post("/auth/login", data);
-
 // CV / Persona
 export const uploadCV = (file: File) => {
   const form = new FormData();

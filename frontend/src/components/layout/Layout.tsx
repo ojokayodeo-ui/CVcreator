@@ -1,16 +1,8 @@
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { logout, isAuthenticated } from "../../store/authStore";
-import { BriefcaseIcon, UserIcon, HistoryIcon, LogOutIcon, SparklesIcon, SettingsIcon } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { BriefcaseIcon, UserIcon, HistoryIcon, SparklesIcon, SettingsIcon } from "lucide-react";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const navigate = useNavigate();
   const location = useLocation();
-  const authed = isAuthenticated();
-
-  function handleLogout() {
-    logout();
-    navigate("/login");
-  }
 
   const navItem = (to: string, label: string, Icon: React.ElementType) => (
     <Link
@@ -34,21 +26,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <SparklesIcon size={20} />
             AI Job Engine
           </Link>
-          {authed && (
-            <nav className="flex items-center gap-1">
-              {navItem("/dashboard", "Generate", BriefcaseIcon)}
-              {navItem("/persona", "My Persona", UserIcon)}
-              {navItem("/history", "History", HistoryIcon)}
-              {navItem("/settings", "Settings", SettingsIcon)}
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors"
-              >
-                <LogOutIcon size={16} />
-                Logout
-              </button>
-            </nav>
-          )}
+          <nav className="flex items-center gap-1">
+            {navItem("/dashboard", "Generate", BriefcaseIcon)}
+            {navItem("/persona", "My Persona", UserIcon)}
+            {navItem("/history", "History", HistoryIcon)}
+            {navItem("/settings", "Settings", SettingsIcon)}
+          </nav>
         </div>
       </header>
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-8">{children}</main>
