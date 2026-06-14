@@ -4,10 +4,10 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
   BriefcaseIcon, SparklesIcon, DownloadIcon, AlertCircleIcon,
-  CheckCircleIcon, TrendingUpIcon, MessageSquareIcon, MapIcon,
+  CheckCircleIcon, TrendingUpIcon, MessageSquareIcon, MapIcon, UserSearchIcon,
 } from "lucide-react";
 
-type Tab = "cv" | "cover" | "match" | "strategy" | "questions";
+type Tab = "cv" | "cover" | "match" | "strategy" | "questions" | "ideal";
 
 export default function DashboardPage() {
   const [jobUrl, setJobUrl] = useState("");
@@ -63,6 +63,7 @@ export default function DashboardPage() {
     { key: "match", label: "Match Score", icon: TrendingUpIcon },
     { key: "strategy", label: "Strategy", icon: MapIcon },
     { key: "questions", label: "Interview Prep", icon: SparklesIcon },
+    { key: "ideal", label: "Ideal Candidate", icon: UserSearchIcon },
   ];
 
   return (
@@ -278,6 +279,12 @@ export default function DashboardPage() {
                     )}
                   </div>
                 ))}
+              </div>
+            )}
+
+            {activeTab === "ideal" && (
+              <div className="prose prose-slate prose-sm max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{result.ideal_candidate_profile}</ReactMarkdown>
               </div>
             )}
           </div>

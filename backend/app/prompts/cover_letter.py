@@ -18,6 +18,7 @@ Rules:
 6. Do NOT repeat the CV — tell a story the CV cannot
 7. Reference the company name and role title specifically
 8. Output clean Markdown
+9. Do not use em dashes (—) anywhere in the output. Use commas, periods, or "and" instead
 
 Write the cover letter now:
 """

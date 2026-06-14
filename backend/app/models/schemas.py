@@ -76,6 +76,7 @@ class GeneratedDocuments(BaseModel):
     strategy_plan: Optional[str] = None
     interview_stages: Optional[list[str]] = None
     interview_questions: Optional[list[dict]] = None
+    ideal_candidate_profile: Optional[str] = None
     drive_folder_url: Optional[str] = None
 
 

@@ -36,8 +36,13 @@ Return ONLY valid JSON:
       "week": "Week 1",
       "tasks": []
     }}
-  ]
+  ],
+  "ideal_candidate_profile": "Full markdown description of the LinkedIn profile of an ideal, highly competitive candidate for this role"
 }}
 
 Generate 15-20 likely interview questions. Be specific to this role and company.
+
+For "ideal_candidate_profile": describe, in markdown, what the LinkedIn profile of a top candidate who would land this role would look like. Include a sample headline, an "About" summary, key skills to list, the kind of experience entries and achievements they'd show, and any certifications or activity (posts, endorsements) that would stand out. Use this to highlight the gap between the candidate's current profile and this ideal.
+
+Do not use em dashes (—) anywhere in the output. Use commas, periods, or "and" instead.
 """

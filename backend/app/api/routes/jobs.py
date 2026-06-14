@@ -118,6 +118,7 @@ async def generate_documents(
         "interview_stages": strategy_data.get("interview_stages", []),
         "interview_questions": strategy_data.get("interview_questions", []),
         "preparation_roadmap": strategy_data.get("preparation_roadmap", []),
+        "ideal_candidate_profile": strategy_data.get("ideal_candidate_profile", ""),
         "drive_folder_url": drive_url,
     }
 
@@ -132,6 +133,7 @@ async def generate_documents(
             "optimised_cv": optimised_cv,
             "cover_letter": cover_letter,
             "strategy_plan": strategy_data.get("strategy_plan", ""),
+            "ideal_candidate_profile": strategy_data.get("ideal_candidate_profile", ""),
         },
     }).execute()
 

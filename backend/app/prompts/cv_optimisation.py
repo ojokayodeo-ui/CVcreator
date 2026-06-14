@@ -19,6 +19,8 @@ Rules:
 6. Keep it concise: 1-2 pages equivalent
 7. ATS-friendly: no tables, graphics descriptions, or special characters
 8. Structure: Summary → Skills → Experience → Education → Certifications
+9. For every role listed under Experience, add a final bullet starting with "**Key achievement:**" that highlights the single most impactful, quantified result from that role
+10. Do not use em dashes (—) anywhere in the output. Use commas, periods, or "and" instead
 
 Generate the full optimised CV now:
 """
