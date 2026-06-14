@@ -1,7 +1,6 @@
 [phases.setup]
 nixPkgs = [
   "python311",
-  "python311Packages.pip",
   "chromium",
   "nss",
   "nspr",
@@ -20,9 +19,10 @@ nixPkgs = [
 
 [phases.install]
 cmds = [
-  "pip install -r requirements.txt",
-  "playwright install chromium"
+  "python3.11 -m venv /opt/venv",
+  ". /opt/venv/bin/activate && pip install -r requirements.txt",
+  ". /opt/venv/bin/activate && playwright install chromium"
 ]
 
 [start]
-cmd = "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+cmd = ". /opt/venv/bin/activate && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
