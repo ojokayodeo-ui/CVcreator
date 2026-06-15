@@ -94,6 +94,7 @@ async def _extract_job_text(page, url: str) -> str:
         "bamboohr.com": ["#JobDescriptionContainer", ".job-description"],
         "ashbyhq.com": ["[class*='job-posting']", "main"],
         "myworkdayjobs.com": ["[data-automation-id='jobPostingDescription']"],
+        "adzuna.": [".adp-body", "#job-ad-container", ".job-ad-content", "main"],
     }
 
     for domain, selectors in selectors_by_platform.items():

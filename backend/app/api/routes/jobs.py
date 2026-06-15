@@ -56,10 +56,13 @@ async def analyze_job(
     user_id: str = Depends(get_current_user_id),
 ):
     """Scrape and analyse a job posting."""
-    job_text = payload.manual_description or None
+    job_text = None
 
-    if not job_text and payload.job_url:
+    if payload.job_url:
         job_text = await scrape_job_page(payload.job_url)
+
+    if not job_text:
+        job_text = payload.manual_description or None
 
     if not job_text:
         raise HTTPException(
@@ -95,10 +98,13 @@ async def generate_documents(
         raise HTTPException(status_code=404, detail="No persona found. Upload your CV first.")
     persona = persona_result.data[0]
 
-    # Scrape / load job — prefer a manually supplied description (e.g. from job search results)
-    job_text = payload.manual_description or None
-    if not job_text and payload.job_url:
+    # Scrape / load job — scrape for the full posting, falling back to a manually
+    # supplied (or search-result) description if scraping fails or is blocked.
+    job_text = None
+    if payload.job_url:
         job_text = await scrape_job_page(payload.job_url)
+    if not job_text:
+        job_text = payload.manual_description or None
     if not job_text:
         raise HTTPException(status_code=422, detail="Job scraping failed. Paste the description manually.")
 
