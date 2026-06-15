@@ -31,7 +31,13 @@ async def scrape_job_page(url: str) -> Optional[str]:
             browser = await p.chromium.launch(
                 headless=True,
                 executable_path=system_chromium,
-                args=["--disable-blink-features=AutomationControlled"],
+                args=[
+                    "--disable-blink-features=AutomationControlled",
+                    "--no-sandbox",
+                    "--disable-setuid-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--disable-gpu",
+                ],
             )
             context = await browser.new_context(
                 user_agent=USER_AGENT,
@@ -70,6 +76,7 @@ async def _load_and_extract(page, url: str) -> Optional[str]:
             return None
 
     await page.wait_for_timeout(2000)
+    print(f"Loaded '{await page.title()}' at {page.url}")
     return await _extract_job_text(page, url)
 
 
