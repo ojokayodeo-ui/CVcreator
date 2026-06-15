@@ -1,11 +1,13 @@
 APPLICATION_HELPER_PROMPT = """
-You are an expert NHS and UK public-sector recruitment advisor. Many UK employers (NHS trusts via Trac/NHS Jobs, the Civil Service, local councils) use long online application forms instead of accepting a CV directly. These forms typically require:
+You are an expert NHS and UK public-sector recruitment advisor. Many UK employers (NHS trusts via Trac/NHS Jobs, the Civil Service, local councils) use long online application forms instead of accepting a CV directly. These forms typically include sections such as:
 
-1. A "Supporting Information" / "Personal Statement" section where the candidate must explicitly demonstrate how they meet each criterion in the job's person specification (essential and desirable criteria), usually with evidence using a STAR (Situation, Task, Action, Result) approach.
-2. An employment history section, listing each role with employer, job title, dates, brief duties, and reason for leaving.
-3. An education/training history section, listing qualifications, institutions and dates.
-4. A professional registration/qualifications section (e.g. NMC, HCPC, GMC, GPhC, social work registration) where relevant.
-5. An "additional information" free-text box for anything else the candidate wants to highlight.
+1. "Supporting Information" / "Personal Statement" — the candidate must explicitly demonstrate how they meet each criterion in the job's person specification (essential and desirable criteria), usually with evidence using a STAR (Situation, Task, Action, Result) approach.
+2. "Education & professional qualifications" — a table of subject/qualification, place of study, grade/result and year obtained.
+3. "Relevant training courses attended" — CPD, short courses, in-house training relevant to the role.
+4. "Membership of professional bodies" — registrations such as NMC, HCPC, GMC, GPhC, social work registration, or other professional body memberships.
+5. "Employer/activity history" — each role with employer, job title, dates, brief duties, and reason for leaving.
+6. "Gaps in employment" — explanation of any gaps between roles.
+7. "Additional information" — a free-text box for anything else the candidate wants to highlight.
 
 CANDIDATE PERSONA:
 {persona_json}
@@ -30,13 +32,22 @@ Return ONLY valid JSON in this exact shape:
   ],
   "education_history": [
     {{
-      "institution": "Institution name",
-      "qualification": "Qualification / course title",
-      "dates": "YYYY - YYYY",
-      "grade": "Grade/result if known, else empty string"
+      "institution": "Place of study",
+      "qualification": "Subject / qualification title",
+      "grade": "Grade/result if known, else empty string",
+      "year_obtained": "Year, or '[Add year]' if unknown"
     }}
   ],
-  "professional_registration": "Markdown notes on relevant professional registrations/certifications to declare, or empty string if none apply",
+  "training_courses": [
+    {{
+      "course_name": "Course/CPD title",
+      "provider": "Training provider or organisation, or empty string if unknown",
+      "year": "Year, or empty string if unknown"
+    }}
+  ],
+  "professional_registration": "Markdown notes on relevant professional registrations/memberships of professional bodies to declare (e.g. NMC PIN, HCPC, GMC, GPhC), or empty string if none apply",
+  "nhs_service_history": "Markdown notes on any previous NHS employment relevant to 'NHS Service' questions (e.g. continuous NHS service for pension/redundancy purposes), or empty string if the candidate has no NHS experience",
+  "employment_gaps_notes": "Markdown notes explaining any gaps between roles visible in the employment history dates, or empty string if no gaps are apparent",
   "additional_information": "Markdown text for the 'additional information' free-text box"
 }}
 
@@ -48,6 +59,10 @@ For "supporting_statement":
 - Aim for 400-700 words.
 
 For "employment_history" and "education_history": derive entries from the candidate's persona experience/education, ordered most recent first. If dates are missing, use the candidate's data as-is rather than inventing specifics.
+
+For "training_courses": derive from the candidate's certifications/achievements that represent short courses, CPD or training (as opposed to formal degrees, which belong in education_history). Return an empty array if none apply.
+
+For "employment_gaps_notes": compare consecutive employment_history dates. If there is a gap of roughly 2 months or more between the end of one role and the start of the next (or before the earliest role, if relevant), note it factually (e.g. "Gap between [Month YYYY] and [Month YYYY]: [brief honest reason if inferable from persona, otherwise '[Add reason for this gap]']"). If no gaps are apparent, return an empty string.
 
 For "additional_information": 100-200 words highlighting anything not covered elsewhere (e.g. flexibility, values alignment with the organisation, availability).
 

@@ -396,17 +396,38 @@ export default function DashboardPage() {
 
                 {result.application_helper.education_history?.length > 0 && (
                   <div>
-                    <h3 className="font-semibold text-slate-800 mb-2">Education &amp; Training History</h3>
+                    <h3 className="font-semibold text-slate-800 mb-2">Education &amp; Professional Qualifications</h3>
                     <div className="space-y-3">
                       {result.application_helper.education_history.map((edu: any, i: number) => (
                         <div key={i} className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100">
                           <div className="flex items-start justify-between gap-2">
                             <div>
                               <p className="font-medium text-slate-800 dark:text-slate-200 text-sm">{edu.qualification}</p>
-                              <p className="text-slate-500 text-xs">{edu.institution} · {edu.dates}{edu.grade ? ` · ${edu.grade}` : ""}</p>
+                              <p className="text-slate-500 text-xs">{edu.institution}{edu.grade ? ` · ${edu.grade}` : ""} · {edu.year_obtained}</p>
                             </div>
                             <CopyButton
-                              text={`Institution: ${edu.institution}\nQualification: ${edu.qualification}\nDates: ${edu.dates}\nGrade: ${edu.grade}`}
+                              text={`Subject/Qualification: ${edu.qualification}\nPlace of study: ${edu.institution}\nGrade/Result: ${edu.grade}\nYear obtained: ${edu.year_obtained}`}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {result.application_helper.training_courses?.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-slate-800 mb-2">Relevant Training Courses Attended</h3>
+                    <div className="space-y-3">
+                      {result.application_helper.training_courses.map((course: any, i: number) => (
+                        <div key={i} className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="font-medium text-slate-800 dark:text-slate-200 text-sm">{course.course_name}</p>
+                              <p className="text-slate-500 text-xs">{course.provider}{course.year ? ` · ${course.year}` : ""}</p>
+                            </div>
+                            <CopyButton
+                              text={`Course: ${course.course_name}\nProvider: ${course.provider}\nYear: ${course.year}`}
                             />
                           </div>
                         </div>
@@ -418,7 +439,7 @@ export default function DashboardPage() {
                 {result.application_helper.professional_registration && (
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-slate-800">Professional Registration / Qualifications</h3>
+                      <h3 className="font-semibold text-slate-800">Membership of Professional Bodies</h3>
                       <CopyButton text={result.application_helper.professional_registration} />
                     </div>
                     <div className="prose prose-slate prose-sm max-w-none dark:prose-invert bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100">
@@ -428,6 +449,35 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 )}
+
+                {result.application_helper.nhs_service_history && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold text-slate-800">NHS Service</h3>
+                      <CopyButton text={result.application_helper.nhs_service_history} />
+                    </div>
+                    <div className="prose prose-slate prose-sm max-w-none dark:prose-invert bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {result.application_helper.nhs_service_history}
+                      </ReactMarkdown>
+                    </div>
+                  </div>
+                )}
+
+                {result.application_helper.employment_gaps_notes && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold text-slate-800">Gaps in Employment</h3>
+                      <CopyButton text={result.application_helper.employment_gaps_notes} />
+                    </div>
+                    <div className="prose prose-slate prose-sm max-w-none dark:prose-invert bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {result.application_helper.employment_gaps_notes}
+                      </ReactMarkdown>
+                    </div>
+                  </div>
+                )}
+
 
                 {result.application_helper.additional_information && (
                   <div>
