@@ -10,17 +10,45 @@ import {
 
 type Tab = "cv" | "cover" | "match" | "strategy" | "questions" | "ideal";
 
+const STORAGE_KEY = "dashboard_state";
+
 export default function DashboardPage() {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const prefillDescription = (location.state as { description?: string } | null)?.description;
-  const [jobUrl, setJobUrl] = useState(searchParams.get("jobUrl") || "");
-  const [manualDesc, setManualDesc] = useState(prefillDescription || "");
-  const [showManual, setShowManual] = useState(!!prefillDescription);
+
+  const saved = (() => {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    } catch {
+      return null;
+    }
+  })();
+
+  const [jobUrl, setJobUrl] = useState(searchParams.get("jobUrl") || saved?.jobUrl || "");
+  const [manualDesc, setManualDesc] = useState(prefillDescription || saved?.manualDesc || "");
+  const [showManual, setShowManual] = useState(!!prefillDescription || !!saved?.showManual);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<Tab>("cv");
+  const [result, setResult] = useState<any>(saved?.result || null);
+  const [activeTab, setActiveTab] = useState<Tab>(saved?.activeTab || "cv");
+
+  useEffect(() => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ jobUrl, manualDesc, showManual, result, activeTab })
+    );
+  }, [jobUrl, manualDesc, showManual, result, activeTab]);
+
+  function handleCancel() {
+    setJobUrl("");
+    setManualDesc("");
+    setShowManual(false);
+    setResult(null);
+    setError("");
+    setActiveTab("cv");
+    localStorage.removeItem(STORAGE_KEY);
+  }
 
   async function handleGenerate(e: React.FormEvent) {
     e.preventDefault();
@@ -119,23 +147,35 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <button
-            type="submit"
-            className="btn-primary w-full text-base py-3"
-            disabled={loading || (!jobUrl && !manualDesc)}
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                </svg>
-                Generating — this takes 30-60s...
-              </span>
-            ) : (
-              "Generate Application Package"
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              className="btn-primary w-full text-base py-3"
+              disabled={loading || (!jobUrl && !manualDesc)}
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                  </svg>
+                  Generating — this takes 30-60s...
+                </span>
+              ) : (
+                "Generate Application Package"
+              )}
+            </button>
+            {(jobUrl || manualDesc || result) && (
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="btn-secondary text-base py-3 px-6"
+                disabled={loading}
+              >
+                Cancel
+              </button>
             )}
-          </button>
+          </div>
         </div>
       </form>
 
