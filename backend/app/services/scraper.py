@@ -1,5 +1,6 @@
 import asyncio
 import re
+import shutil
 from typing import Optional
 from playwright.async_api import async_playwright
 
@@ -23,8 +24,13 @@ async def scrape_job_page(url: str) -> Optional[str]:
     """Scrape job posting text from a URL. Returns None on failure or if blocked."""
     try:
         async with async_playwright() as p:
+            # Prefer the system Chromium provided by Nix on Railway — it is fully
+            # self-contained, unlike Playwright's downloaded build which is missing
+            # shared libraries (libnss3, libatk1.0-0, etc.) in the Nix environment.
+            system_chromium = shutil.which("chromium") or shutil.which("chromium-browser")
             browser = await p.chromium.launch(
                 headless=True,
+                executable_path=system_chromium,
                 args=["--disable-blink-features=AutomationControlled"],
             )
             context = await browser.new_context(

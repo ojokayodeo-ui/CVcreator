@@ -20,8 +20,7 @@ nixPkgs = [
 [phases.install]
 cmds = [
   "python3.11 -m venv /opt/venv",
-  ". /opt/venv/bin/activate && pip install -r requirements.txt",
-  ". /opt/venv/bin/activate && playwright install chromium"
+  ". /opt/venv/bin/activate && pip install -r requirements.txt"
 ]
 
 [start]

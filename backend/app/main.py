@@ -9,13 +9,6 @@ from .api.routes import cv, jobs, drive, download, chat
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Ensure Playwright Chromium is installed on cold-start
-    import subprocess, sys
-    subprocess.run(
-        [sys.executable, "-m", "playwright", "install", "chromium"],
-        check=False, capture_output=True,
-    )
-
     # Ensure the single app user exists (satisfies FK constraints on personas/history)
     get_db().table("users").upsert({
         "id": SINGLE_USER_ID,
