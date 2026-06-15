@@ -49,6 +49,21 @@ async def scrape_job_page(url: str) -> Optional[str]:
             await context.add_init_script(
                 "Object.defineProperty(navigator, 'webdriver', { get: () => undefined });"
             )
+
+            # Block heavy resources — keeps Chromium's memory footprint low on
+            # constrained containers and avoids long waits for ad/tracker requests.
+            async def _block(route):
+                await route.abort()
+
+            await context.route(
+                re.compile(r"\.(png|jpe?g|gif|svg|webp|woff2?|ttf|mp4|avi|css)(\?.*)?$", re.I),
+                _block,
+            )
+            await context.route(
+                re.compile(r"(doubleclick|googlesyndication|google-analytics|googletagmanager|facebook\.net|hotjar|criteo|adsystem)"),
+                _block,
+            )
+
             page = await context.new_page()
 
             text = await _load_and_extract(page, url)
@@ -66,11 +81,12 @@ async def scrape_job_page(url: str) -> Optional[str]:
 
 async def _load_and_extract(page, url: str) -> Optional[str]:
     try:
-        await page.goto(url, wait_until="networkidle", timeout=45000)
+        # domcontentloaded is far lighter than networkidle on ad-heavy pages,
+        # which can otherwise run Chromium out of memory on constrained hosts.
+        await page.goto(url, wait_until="domcontentloaded", timeout=30000)
     except Exception:
-        # Some sites never go fully idle (live chat widgets etc.) — fall back to DOM ready
         try:
-            await page.goto(url, wait_until="domcontentloaded", timeout=45000)
+            await page.goto(url, wait_until="commit", timeout=30000)
         except Exception as e:
             print(f"Navigation failed for {url}: {e}")
             return None
