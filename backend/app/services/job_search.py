@@ -32,6 +32,8 @@ async def search_jobs(
     location: str = "",
     page: int = 1,
     results_per_page: int = 20,
+    max_days_old: int | None = None,
+    sort_by: str = "relevance",
 ) -> dict:
     """Search for job vacancies on Adzuna."""
     settings = get_settings()
@@ -51,6 +53,10 @@ async def search_jobs(
     }
     if location:
         params["where"] = location
+    if max_days_old:
+        params["max_days_old"] = max_days_old
+    if sort_by in ("date", "salary", "relevance"):
+        params["sort_by"] = sort_by
 
     url = f"{ADZUNA_BASE_URL}/{country}/search/{page}"
 

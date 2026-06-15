@@ -30,11 +30,20 @@ async def search_job_vacancies(
     country: str = "gb",
     location: str = "",
     page: int = 1,
+    max_days_old: int | None = None,
+    sort_by: str = "relevance",
     user_id: str = Depends(get_current_user_id),
 ):
-    """Search live job vacancies by keyword, country and location."""
+    """Search live job vacancies by keyword, country, location and recency."""
     try:
-        return await search_jobs(keyword=keyword, country=country, location=location, page=page)
+        return await search_jobs(
+            keyword=keyword,
+            country=country,
+            location=location,
+            page=page,
+            max_days_old=max_days_old,
+            sort_by=sort_by,
+        )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getSearchCountries, searchJobs } from "../../services/api";
-import { SearchIcon, AlertCircleIcon, MapPinIcon, BuildingIcon, SparklesIcon, ExternalLinkIcon } from "lucide-react";
+import { SearchIcon, AlertCircleIcon, MapPinIcon, BuildingIcon, SparklesIcon, ExternalLinkIcon, ClockIcon } from "lucide-react";
 
 type Country = { code: string; name: string };
 type JobResult = {
@@ -22,6 +22,8 @@ export default function JobSearchPage() {
   const [keyword, setKeyword] = useState("");
   const [country, setCountry] = useState("gb");
   const [location, setLocation] = useState("");
+  const [maxDaysOld, setMaxDaysOld] = useState("");
+  const [sortBy, setSortBy] = useState("date");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [results, setResults] = useState<JobResult[]>([]);
@@ -37,7 +39,14 @@ export default function JobSearchPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await searchJobs(keyword.trim(), country, location.trim());
+      const res = await searchJobs(
+        keyword.trim(),
+        country,
+        location.trim(),
+        1,
+        maxDaysOld ? Number(maxDaysOld) : undefined,
+        sortBy
+      );
       setResults(res.data.results);
       setCount(res.data.count);
     } catch (e: any) {
@@ -51,6 +60,17 @@ export default function JobSearchPage() {
 
   function handleGenerate(job: JobResult) {
     navigate(`/dashboard?jobUrl=${encodeURIComponent(job.url)}`);
+  }
+
+  function formatPostedDate(created: string) {
+    if (!created) return "";
+    const date = new Date(created);
+    const days = Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
+    if (days <= 0) return "Posted today";
+    if (days === 1) return "Posted yesterday";
+    if (days < 30) return `Posted ${days} days ago`;
+    const months = Math.floor(days / 30);
+    return `Posted ${months} month${months > 1 ? "s" : ""} ago`;
   }
 
   function formatSalary(min: number | null, max: number | null) {
@@ -99,6 +119,28 @@ export default function JobSearchPage() {
           </div>
         </div>
 
+        <div className="grid md:grid-cols-4 gap-4 mt-4">
+          <div>
+            <label className="text-sm font-medium text-slate-700">Posted Within</label>
+            <select className="input mt-1" value={maxDaysOld} onChange={(e) => setMaxDaysOld(e.target.value)}>
+              <option value="">Any time</option>
+              <option value="1">Last 24 hours</option>
+              <option value="3">Last 3 days</option>
+              <option value="7">Last 7 days</option>
+              <option value="14">Last 14 days</option>
+              <option value="30">Last 30 days</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-slate-700">Sort By</label>
+            <select className="input mt-1" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <option value="date">Most recent</option>
+              <option value="relevance">Relevance</option>
+              <option value="salary">Salary</option>
+            </select>
+          </div>
+        </div>
+
         {error && (
           <div className="flex items-start gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg mt-4">
             <AlertCircleIcon size={16} className="mt-0.5 shrink-0" />
@@ -123,6 +165,7 @@ export default function JobSearchPage() {
                     <div className="flex items-center gap-3 text-sm text-slate-500 mt-1">
                       <span className="flex items-center gap-1"><BuildingIcon size={14} /> {job.company}</span>
                       {job.location && <span className="flex items-center gap-1"><MapPinIcon size={14} /> {job.location}</span>}
+                      {job.created && <span className="flex items-center gap-1"><ClockIcon size={14} /> {formatPostedDate(job.created)}</span>}
                     </div>
                   </div>
                   <div className="flex flex-col gap-2 shrink-0">

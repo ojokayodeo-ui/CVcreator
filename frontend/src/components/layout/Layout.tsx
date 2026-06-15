@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { BriefcaseIcon, UserIcon, HistoryIcon, SparklesIcon, SettingsIcon, MessageSquareIcon, SearchIcon } from "lucide-react";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -33,6 +34,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             {navItem("/history", "History", HistoryIcon)}
             {navItem("/chat", "Career Advisor", MessageSquareIcon)}
             {navItem("/settings", "Settings", SettingsIcon)}
+            <ThemeToggle />
           </nav>
         </div>
       </header>
