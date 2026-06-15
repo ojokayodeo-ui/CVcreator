@@ -1,6 +1,8 @@
 import asyncio
 import re
 import shutil
+import httpx
+from bs4 import BeautifulSoup
 from typing import Optional
 from playwright.async_api import async_playwright
 
@@ -19,14 +21,103 @@ BLOCKED_MARKERS = [
     "request blocked",
 ]
 
+# CSS selectors for the main job description container, by platform domain.
+SELECTORS_BY_PLATFORM = {
+    "linkedin.com": [
+        ".job-view-layout",
+        ".description__text",
+        ".jobs-description",
+        ".jobs-box__html-content",
+    ],
+    "indeed.com": [
+        "#jobDescriptionText",
+        ".jobsearch-jobDescriptionText",
+    ],
+    "greenhouse.io": ["#content", ".job-post", "#main"],
+    "lever.co": [".posting-page", ".content", ".posting-requirements"],
+    "workday.com": ["[data-automation-id='job-posting-details']"],
+    "smartrecruiters.com": [".job-sections", "#job-description"],
+    "bamboohr.com": ["#JobDescriptionContainer", ".job-description"],
+    "ashbyhq.com": ["[class*='job-posting']", "main"],
+    "myworkdayjobs.com": ["[data-automation-id='jobPostingDescription']"],
+    "adzuna.": [".adp-body", "#job-ad-container", ".job-ad-content", "main"],
+}
+
+GENERIC_CANDIDATES = [
+    "main", "article", "#main-content", "#job-description", ".job-description",
+    "[class*='description']", "[class*='job-detail']", "[id*='description']",
+    "[role='main']",
+]
+
 
 async def scrape_job_page(url: str) -> Optional[str]:
     """Scrape job posting text from a URL. Returns None on failure or if blocked."""
+    text = await _scrape_with_httpx(url)
+    if text and not _looks_blocked(text):
+        return text
+
+    print(f"httpx scrape insufficient for {url}, trying browser")
+    text = await _scrape_with_browser(url)
+    if text and not _looks_blocked(text):
+        return text
+
+    print(f"Scraping blocked or failed for {url}")
+    return None
+
+
+async def _scrape_with_httpx(url: str) -> Optional[str]:
+    """Fetch the page HTML directly — works for server-rendered job pages
+    without the overhead/fragility of a headless browser."""
+    headers = {
+        "User-Agent": USER_AGENT,
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    }
+    try:
+        async with httpx.AsyncClient(follow_redirects=True, timeout=20, headers=headers) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+    except Exception as e:
+        print(f"httpx fetch failed for {url}: {e}")
+        return None
+
+    final_url = str(response.url)
+    soup = BeautifulSoup(response.text, "lxml")
+
+    for tag in soup(["script", "style", "noscript", "svg"]):
+        tag.decompose()
+
+    for domain, selectors in SELECTORS_BY_PLATFORM.items():
+        if domain in final_url:
+            for sel in selectors:
+                el = soup.select_one(sel)
+                if el:
+                    text = _clean_text(el.get_text("\n"))
+                    if len(text) > 100:
+                        print(f"httpx extracted {len(text)} chars from '{sel}' on {final_url}")
+                        return text
+
+    best_text = ""
+    for sel in GENERIC_CANDIDATES:
+        for el in soup.select(sel):
+            text = el.get_text("\n").strip()
+            if len(text) > len(best_text):
+                best_text = text
+
+    if len(best_text) > 200:
+        print(f"httpx extracted {len(best_text)} chars from generic candidates on {final_url}")
+        return _clean_text(best_text)
+
+    body = soup.body
+    body_text = body.get_text("\n").strip() if body else ""
+    print(f"httpx extracted {len(body_text)} chars from <body> fallback on {final_url}")
+    return _clean_text(body_text)
+
+
+async def _scrape_with_browser(url: str) -> Optional[str]:
+    """Headless-browser fallback for JS-rendered pages."""
     try:
         async with async_playwright() as p:
-            # Prefer the system Chromium provided by Nix on Railway — it is fully
-            # self-contained, unlike Playwright's downloaded build which is missing
-            # shared libraries (libnss3, libatk1.0-0, etc.) in the Nix environment.
             system_chromium = shutil.which("chromium") or shutil.which("chromium-browser")
             browser = await p.chromium.launch(
                 headless=True,
@@ -50,8 +141,6 @@ async def scrape_job_page(url: str) -> Optional[str]:
                 "Object.defineProperty(navigator, 'webdriver', { get: () => undefined });"
             )
 
-            # Block heavy resources — keeps Chromium's memory footprint low on
-            # constrained containers and avoids long waits for ad/tracker requests.
             async def _block(route):
                 await route.abort()
 
@@ -65,24 +154,16 @@ async def scrape_job_page(url: str) -> Optional[str]:
             )
 
             page = await context.new_page()
-
             text = await _load_and_extract(page, url)
             await browser.close()
-
-            if text and _looks_blocked(text):
-                print(f"Scraping blocked for {url}")
-                return None
-
             return text
     except Exception as e:
-        print(f"Scraping failed for {url}: {e}")
+        print(f"Browser scraping failed for {url}: {e}")
         return None
 
 
 async def _load_and_extract(page, url: str) -> Optional[str]:
     try:
-        # domcontentloaded is far lighter than networkidle on ad-heavy pages,
-        # which can otherwise run Chromium out of memory on constrained hosts.
         await page.goto(url, wait_until="domcontentloaded", timeout=30000)
     except Exception:
         try:
@@ -105,28 +186,7 @@ def _looks_blocked(text: str) -> bool:
 
 async def _extract_job_text(page, url: str) -> str:
     """Try platform-specific selectors, fall back to generic body text."""
-    selectors_by_platform = {
-        "linkedin.com": [
-            ".job-view-layout",
-            ".description__text",
-            ".jobs-description",
-            ".jobs-box__html-content",
-        ],
-        "indeed.com": [
-            "#jobDescriptionText",
-            ".jobsearch-jobDescriptionText",
-        ],
-        "greenhouse.io": ["#content", ".job-post", "#main"],
-        "lever.co": [".posting-page", ".content", ".posting-requirements"],
-        "workday.com": ["[data-automation-id='job-posting-details']"],
-        "smartrecruiters.com": [".job-sections", "#job-description"],
-        "bamboohr.com": ["#JobDescriptionContainer", ".job-description"],
-        "ashbyhq.com": ["[class*='job-posting']", "main"],
-        "myworkdayjobs.com": ["[data-automation-id='jobPostingDescription']"],
-        "adzuna.": [".adp-body", "#job-ad-container", ".job-ad-content", "main"],
-    }
-
-    for domain, selectors in selectors_by_platform.items():
+    for domain, selectors in SELECTORS_BY_PLATFORM.items():
         if domain in url:
             for sel in selectors:
                 try:
@@ -142,13 +202,8 @@ async def _extract_job_text(page, url: str) -> str:
     # Generic fallback: evaluate candidate content containers and pick whichever
     # has the most text — avoids grabbing a near-empty <main> while the real
     # description sits in an unstyled div.
-    candidates = [
-        "main", "article", "#main-content", "#job-description", ".job-description",
-        "[class*='description']", "[class*='job-detail']", "[id*='description']",
-        "[role='main']",
-    ]
     best_text = ""
-    for sel in candidates:
+    for sel in GENERIC_CANDIDATES:
         try:
             elements = await page.query_selector_all(sel)
             for el in elements:
