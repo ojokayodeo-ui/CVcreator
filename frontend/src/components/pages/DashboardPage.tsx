@@ -6,9 +6,28 @@ import remarkGfm from "remark-gfm";
 import {
   BriefcaseIcon, SparklesIcon, DownloadIcon, AlertCircleIcon,
   CheckCircleIcon, TrendingUpIcon, MessageSquareIcon, MapIcon, UserSearchIcon,
+  ClipboardListIcon, CopyIcon, CheckIcon,
 } from "lucide-react";
 
-type Tab = "cv" | "cover" | "match" | "strategy" | "questions" | "ideal";
+type Tab = "cv" | "cover" | "match" | "strategy" | "questions" | "ideal" | "helper";
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }}
+      className="btn-secondary flex items-center gap-1.5 text-xs px-2 py-1"
+    >
+      {copied ? <CheckIcon size={12} /> : <CopyIcon size={12} />}
+      {copied ? "Copied" : "Copy"}
+    </button>
+  );
+}
 
 const STORAGE_KEY = "dashboard_state";
 
@@ -96,6 +115,7 @@ export default function DashboardPage() {
     { key: "strategy", label: "Strategy", icon: MapIcon },
     { key: "questions", label: "Interview Prep", icon: SparklesIcon },
     { key: "ideal", label: "Ideal Candidate", icon: UserSearchIcon },
+    { key: "helper", label: "Application Helper", icon: ClipboardListIcon },
   ];
 
   return (
@@ -329,6 +349,99 @@ export default function DashboardPage() {
             {activeTab === "ideal" && (
               <div className="prose prose-slate prose-sm max-w-none dark:prose-invert">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{result.ideal_candidate_profile}</ReactMarkdown>
+              </div>
+            )}
+
+            {activeTab === "helper" && result.application_helper && (
+              <div className="space-y-8">
+                <p className="text-sm text-slate-500 -mt-2">
+                  Use these as ready-to-paste answers for NHS Jobs/Trac, Civil Service Jobs and similar
+                  online application forms.
+                </p>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-slate-800">Supporting Statement / Personal Statement</h3>
+                    <CopyButton text={result.application_helper.supporting_statement || ""} />
+                  </div>
+                  <div className="prose prose-slate prose-sm max-w-none dark:prose-invert bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {result.application_helper.supporting_statement || ""}
+                    </ReactMarkdown>
+                  </div>
+                </div>
+
+                {result.application_helper.employment_history?.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-slate-800 mb-2">Employment History</h3>
+                    <div className="space-y-3">
+                      {result.application_helper.employment_history.map((job: any, i: number) => (
+                        <div key={i} className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100">
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <div>
+                              <p className="font-medium text-slate-800 dark:text-slate-200 text-sm">{job.job_title}</p>
+                              <p className="text-slate-500 text-xs">{job.employer} · {job.dates}</p>
+                            </div>
+                            <CopyButton
+                              text={`Employer: ${job.employer}\nJob title: ${job.job_title}\nDates: ${job.dates}\nDuties: ${job.duties_summary}\nReason for leaving: ${job.reason_for_leaving}`}
+                            />
+                          </div>
+                          <p className="text-slate-600 dark:text-slate-300 text-sm mt-2">{job.duties_summary}</p>
+                          <p className="text-slate-500 text-xs mt-2">Reason for leaving: {job.reason_for_leaving}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {result.application_helper.education_history?.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-slate-800 mb-2">Education &amp; Training History</h3>
+                    <div className="space-y-3">
+                      {result.application_helper.education_history.map((edu: any, i: number) => (
+                        <div key={i} className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="font-medium text-slate-800 dark:text-slate-200 text-sm">{edu.qualification}</p>
+                              <p className="text-slate-500 text-xs">{edu.institution} · {edu.dates}{edu.grade ? ` · ${edu.grade}` : ""}</p>
+                            </div>
+                            <CopyButton
+                              text={`Institution: ${edu.institution}\nQualification: ${edu.qualification}\nDates: ${edu.dates}\nGrade: ${edu.grade}`}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {result.application_helper.professional_registration && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold text-slate-800">Professional Registration / Qualifications</h3>
+                      <CopyButton text={result.application_helper.professional_registration} />
+                    </div>
+                    <div className="prose prose-slate prose-sm max-w-none dark:prose-invert bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {result.application_helper.professional_registration}
+                      </ReactMarkdown>
+                    </div>
+                  </div>
+                )}
+
+                {result.application_helper.additional_information && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold text-slate-800">Additional Information</h3>
+                      <CopyButton text={result.application_helper.additional_information} />
+                    </div>
+                    <div className="prose prose-slate prose-sm max-w-none dark:prose-invert bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-slate-100">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {result.application_helper.additional_information}
+                      </ReactMarkdown>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

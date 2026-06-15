@@ -9,6 +9,7 @@ from ...services.ai_engine import (
     generate_optimised_cv,
     generate_cover_letter,
     generate_strategy,
+    generate_application_helper,
 )
 from ...services.document_generator import markdown_to_docx
 from ...services.drive_service import save_job_documents
@@ -120,12 +121,15 @@ async def generate_documents(
         tasks.append(generate_cover_letter(persona, job_data, match.get("overall_score", 70)))
     if payload.generate_strategy:
         tasks.append(generate_strategy(persona, job_data, match))
+    if payload.generate_application_helper:
+        tasks.append(generate_application_helper(persona, job_data, match))
 
     results = await asyncio.gather(*tasks)
     result_iter = iter(results)
     optimised_cv = next(result_iter) if payload.generate_cv else ""
     cover_letter = next(result_iter) if payload.generate_cover_letter else ""
     strategy_data = next(result_iter) if payload.generate_strategy else {}
+    application_helper = next(result_iter) if payload.generate_application_helper else {}
 
     drive_url = None
     if payload.save_to_drive:
@@ -153,6 +157,7 @@ async def generate_documents(
         "interview_questions": strategy_data.get("interview_questions", []),
         "preparation_roadmap": strategy_data.get("preparation_roadmap", []),
         "ideal_candidate_profile": strategy_data.get("ideal_candidate_profile", ""),
+        "application_helper": application_helper,
         "drive_folder_url": drive_url,
     }
 
@@ -168,6 +173,7 @@ async def generate_documents(
             "cover_letter": cover_letter,
             "strategy_plan": strategy_data.get("strategy_plan", ""),
             "ideal_candidate_profile": strategy_data.get("ideal_candidate_profile", ""),
+            "application_helper": application_helper,
         },
     }).execute()
 

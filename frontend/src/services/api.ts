@@ -25,6 +25,7 @@ export const generateDocuments = (payload: {
   generate_cv?: boolean;
   generate_cover_letter?: boolean;
   generate_strategy?: boolean;
+  generate_application_helper?: boolean;
   save_to_drive?: boolean;
 }) => api.post("/jobs/generate", payload);
 

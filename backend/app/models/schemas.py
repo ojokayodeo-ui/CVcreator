@@ -64,6 +64,7 @@ class GenerateRequest(BaseModel):
     generate_cv: bool = True
     generate_cover_letter: bool = True
     generate_strategy: bool = True
+    generate_application_helper: bool = True
     save_to_drive: bool = False
 
 
@@ -77,6 +78,7 @@ class GeneratedDocuments(BaseModel):
     interview_stages: Optional[list[str]] = None
     interview_questions: Optional[list[dict]] = None
     ideal_candidate_profile: Optional[str] = None
+    application_helper: Optional[dict] = None
     drive_folder_url: Optional[str] = None
 
 

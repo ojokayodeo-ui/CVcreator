@@ -7,6 +7,7 @@ from ..prompts.job_analysis import JOB_ANALYSIS_PROMPT, MATCH_ANALYSIS_PROMPT
 from ..prompts.cv_optimisation import CV_OPTIMISATION_PROMPT
 from ..prompts.cover_letter import COVER_LETTER_PROMPT
 from ..prompts.strategy import STRATEGY_PROMPT
+from ..prompts.application_helper import APPLICATION_HELPER_PROMPT
 from ..prompts.career_advisor import CAREER_ADVISOR_SYSTEM_PROMPT
 
 _client: AsyncAnthropic | None = None
@@ -86,6 +87,16 @@ async def generate_cover_letter(persona: dict, job: dict, match_score: int) -> s
 
 async def generate_strategy(persona: dict, job: dict, match: dict) -> dict:
     prompt = STRATEGY_PROMPT.format(
+        persona_json=json.dumps(persona, indent=2),
+        job_json=json.dumps(job, indent=2),
+        match_json=json.dumps(match, indent=2),
+    )
+    result = await _chat(prompt, json_mode=True)
+    return _parse_json(result)
+
+
+async def generate_application_helper(persona: dict, job: dict, match: dict) -> dict:
+    prompt = APPLICATION_HELPER_PROMPT.format(
         persona_json=json.dumps(persona, indent=2),
         job_json=json.dumps(job, indent=2),
         match_json=json.dumps(match, indent=2),
