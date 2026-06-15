@@ -3,20 +3,41 @@ import { useDropzone } from "react-dropzone";
 import { uploadCV, savePersona, getPersona } from "../../services/api";
 import { UploadIcon, CheckCircleIcon, UserIcon } from "lucide-react";
 
+const STORAGE_KEY = "persona_review_state";
+
 export default function PersonaPage() {
-  const [step, setStep] = useState<"upload" | "review" | "saved">("upload");
+  const savedReview = (() => {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    } catch {
+      return null;
+    }
+  })();
+
+  const [step, setStep] = useState<"upload" | "review" | "saved">(
+    savedReview?.step === "review" ? "review" : "upload"
+  );
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [persona, setPersona] = useState<any>({});
-  const [initialLoading, setInitialLoading] = useState(true);
+  const [persona, setPersona] = useState<any>(savedReview?.step === "review" ? savedReview.persona : {});
+  const [initialLoading, setInitialLoading] = useState(savedReview?.step !== "review");
 
   useEffect(() => {
+    if (savedReview?.step === "review") return;
     getPersona()
       .then((r) => { setPersona(r.data); setStep("saved"); })
       .catch(() => {})
       .finally(() => setInitialLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (step === "review") {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ step, persona }));
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }, [step, persona]);
 
   const onDrop = useCallback(async (files: File[]) => {
     const file = files[0];
