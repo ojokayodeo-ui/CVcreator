@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { BriefcaseIcon, UserIcon, HistoryIcon, SparklesIcon, SettingsIcon } from "lucide-react";
+import { BriefcaseIcon, UserIcon, HistoryIcon, SparklesIcon, SettingsIcon, MessageSquareIcon } from "lucide-react";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -30,6 +30,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             {navItem("/dashboard", "Generate", BriefcaseIcon)}
             {navItem("/persona", "My Persona", UserIcon)}
             {navItem("/history", "History", HistoryIcon)}
+            {navItem("/chat", "Career Advisor", MessageSquareIcon)}
             {navItem("/settings", "Settings", SettingsIcon)}
           </nav>
         </div>

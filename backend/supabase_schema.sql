@@ -50,6 +50,15 @@ create table if not exists job_analyses (
   created_at timestamptz default now()
 );
 
+-- Career advisor chat messages
+create table if not exists chat_messages (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references users(id) on delete cascade,
+  role text not null,
+  content text not null,
+  created_at timestamptz default now()
+);
+
 -- Google Drive OAuth tokens
 create table if not exists drive_tokens (
   id uuid primary key default gen_random_uuid(),
@@ -63,6 +72,7 @@ alter table users enable row level security;
 alter table personas enable row level security;
 alter table generation_history enable row level security;
 alter table job_analyses enable row level security;
+alter table chat_messages enable row level security;
 alter table drive_tokens enable row level security;
 
 -- Policies (service role bypasses RLS, used by backend)
@@ -70,4 +80,5 @@ create policy "Service role full access" on users using (true) with check (true)
 create policy "Service role full access" on personas using (true) with check (true);
 create policy "Service role full access" on generation_history using (true) with check (true);
 create policy "Service role full access" on job_analyses using (true) with check (true);
+create policy "Service role full access" on chat_messages using (true) with check (true);
 create policy "Service role full access" on drive_tokens using (true) with check (true);

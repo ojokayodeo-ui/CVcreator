@@ -7,6 +7,7 @@ from ..prompts.job_analysis import JOB_ANALYSIS_PROMPT, MATCH_ANALYSIS_PROMPT
 from ..prompts.cv_optimisation import CV_OPTIMISATION_PROMPT
 from ..prompts.cover_letter import COVER_LETTER_PROMPT
 from ..prompts.strategy import STRATEGY_PROMPT
+from ..prompts.career_advisor import CAREER_ADVISOR_SYSTEM_PROMPT
 
 _client: AsyncAnthropic | None = None
 
@@ -91,3 +92,26 @@ async def generate_strategy(persona: dict, job: dict, match: dict) -> dict:
     )
     result = await _chat(prompt, json_mode=True)
     return _parse_json(result)
+
+
+async def career_advisor_reply(persona: dict, history: list[dict], message: str) -> str:
+    """Continue a career-advice conversation, grounded in the user's persona."""
+    client = get_ai_client()
+    settings = get_settings()
+    system = CAREER_ADVISOR_SYSTEM_PROMPT.format(persona_json=json.dumps(persona, indent=2))
+
+    messages = [{"role": m["role"], "content": m["content"]} for m in history]
+    messages.append({"role": "user", "content": message})
+
+    response = await client.messages.create(
+        model=settings.anthropic_model,
+        max_tokens=2048,
+        thinking={"type": "adaptive"},
+        system=system,
+        messages=messages,
+    )
+    text = next(
+        (block.text for block in response.content if hasattr(block, "text")),
+        "",
+    )
+    return text.strip()

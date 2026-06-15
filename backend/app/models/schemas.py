@@ -80,6 +80,17 @@ class GeneratedDocuments(BaseModel):
     drive_folder_url: Optional[str] = None
 
 
+# ── Career Advisor Chat ───────────────────────────────────────────────────────
+
+class ChatMessageRequest(BaseModel):
+    message: str
+
+
+class ChatMessageResponse(BaseModel):
+    role: str
+    content: str
+
+
 # ── Drive ─────────────────────────────────────────────────────────────────────
 
 class DriveAuthRequest(BaseModel):

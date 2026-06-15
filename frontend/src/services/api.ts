@@ -38,6 +38,10 @@ export const downloadCV = (jobId: string) =>
 export const downloadCoverLetter = (jobId: string) =>
   api.get(`/download/${jobId}/cover-letter`, { responseType: "blob" });
 
+// Career Advisor Chat
+export const getChatHistory = () => api.get("/chat/history");
+export const sendChatMessage = (message: string) => api.post("/chat/message", { message });
+
 // Drive
 export const getDriveAuthUrl = () => api.get("/drive/auth");
 export const getDriveStatus = () => api.get("/drive/status");
