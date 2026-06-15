@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useSearchParams, useLocation } from "react-router-dom";
 import { generateDocuments, downloadCV, downloadCoverLetter, triggerDownload } from "../../services/api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -12,9 +12,11 @@ type Tab = "cv" | "cover" | "match" | "strategy" | "questions" | "ideal";
 
 export default function DashboardPage() {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const prefillDescription = (location.state as { description?: string } | null)?.description;
   const [jobUrl, setJobUrl] = useState(searchParams.get("jobUrl") || "");
-  const [manualDesc, setManualDesc] = useState("");
-  const [showManual, setShowManual] = useState(false);
+  const [manualDesc, setManualDesc] = useState(prefillDescription || "");
+  const [showManual, setShowManual] = useState(!!prefillDescription);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<any>(null);

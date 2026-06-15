@@ -59,7 +59,11 @@ export default function JobSearchPage() {
   }
 
   function handleGenerate(job: JobResult) {
-    navigate(`/dashboard?jobUrl=${encodeURIComponent(job.url)}`);
+    // Pass the description we already have from the search API — Adzuna's
+    // redirect links are often blocked from direct scraping.
+    navigate(`/dashboard?jobUrl=${encodeURIComponent(job.url)}`, {
+      state: { description: job.description },
+    });
   }
 
   function formatPostedDate(created: string) {

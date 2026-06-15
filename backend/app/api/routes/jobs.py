@@ -56,19 +56,16 @@ async def analyze_job(
     user_id: str = Depends(get_current_user_id),
 ):
     """Scrape and analyse a job posting."""
-    job_text = None
+    job_text = payload.manual_description or None
 
-    if payload.job_url:
+    if not job_text and payload.job_url:
         job_text = await scrape_job_page(payload.job_url)
 
     if not job_text:
-        if payload.manual_description:
-            job_text = payload.manual_description
-        else:
-            raise HTTPException(
-                status_code=422,
-                detail="Could not scrape the job URL. Please paste the job description manually.",
-            )
+        raise HTTPException(
+            status_code=422,
+            detail="Could not scrape the job URL. Please paste the job description manually.",
+        )
 
     job_data = await analyse_job(job_text)
     job_data["source_url"] = payload.job_url
@@ -98,13 +95,12 @@ async def generate_documents(
         raise HTTPException(status_code=404, detail="No persona found. Upload your CV first.")
     persona = persona_result.data[0]
 
-    # Scrape / load job
-    job_text = await scrape_job_page(payload.job_url) if payload.job_url else None
+    # Scrape / load job — prefer a manually supplied description (e.g. from job search results)
+    job_text = payload.manual_description or None
+    if not job_text and payload.job_url:
+        job_text = await scrape_job_page(payload.job_url)
     if not job_text:
-        if payload.manual_description:
-            job_text = payload.manual_description
-        else:
-            raise HTTPException(status_code=422, detail="Job scraping failed. Paste the description manually.")
+        raise HTTPException(status_code=422, detail="Job scraping failed. Paste the description manually.")
 
     # AI pipeline — run independent steps concurrently where possible
     job_data = await analyse_job(job_text)
