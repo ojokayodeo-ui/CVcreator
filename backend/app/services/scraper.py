@@ -105,22 +105,37 @@ async def _extract_job_text(page, url: str) -> str:
                     if el:
                         text = _clean_text((await el.inner_text()).strip())
                         if len(text) > 100:
+                            print(f"Extracted {len(text)} chars from '{sel}' on {page.url}")
                             return text
                 except Exception:
                     continue
 
-    # Generic fallback: grab main content areas
-    for sel in ["main", "article", "#main-content", ".job-description", "body"]:
+    # Generic fallback: evaluate candidate content containers and pick whichever
+    # has the most text — avoids grabbing a near-empty <main> while the real
+    # description sits in an unstyled div.
+    candidates = [
+        "main", "article", "#main-content", "#job-description", ".job-description",
+        "[class*='description']", "[class*='job-detail']", "[id*='description']",
+        "[role='main']",
+    ]
+    best_text = ""
+    for sel in candidates:
         try:
-            el = await page.query_selector(sel)
-            if el:
+            elements = await page.query_selector_all(sel)
+            for el in elements:
                 text = (await el.inner_text()).strip()
-                if len(text) > 200:
-                    return _clean_text(text)
+                if len(text) > len(best_text):
+                    best_text = text
         except Exception:
             continue
 
-    return _clean_text(await page.inner_text("body"))
+    if len(best_text) > 200:
+        print(f"Extracted {len(best_text)} chars from generic candidates on {page.url}")
+        return _clean_text(best_text)
+
+    body_text = await page.inner_text("body")
+    print(f"Extracted {len(body_text)} chars from <body> fallback on {page.url}")
+    return _clean_text(body_text)
 
 
 def _clean_text(text: str) -> str:
