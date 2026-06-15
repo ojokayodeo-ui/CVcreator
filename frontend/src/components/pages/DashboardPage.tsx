@@ -175,7 +175,7 @@ export default function DashboardPage() {
           {/* Tab content */}
           <div className="card p-6">
             {(activeTab === "cv" || activeTab === "cover") && (
-              <div className="prose prose-slate prose-sm max-w-none">
+              <div className="prose prose-slate prose-sm max-w-none dark:prose-invert">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {activeTab === "cv" ? result.optimised_cv : result.cover_letter}
                 </ReactMarkdown>
@@ -239,7 +239,7 @@ export default function DashboardPage() {
 
             {activeTab === "strategy" && (
               <div className="space-y-6">
-                <div className="prose prose-slate prose-sm max-w-none">
+                <div className="prose prose-slate prose-sm max-w-none dark:prose-invert">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{result.strategy_plan}</ReactMarkdown>
                 </div>
                 {result.interview_stages?.length > 0 && (
@@ -287,7 +287,7 @@ export default function DashboardPage() {
             )}
 
             {activeTab === "ideal" && (
-              <div className="prose prose-slate prose-sm max-w-none">
+              <div className="prose prose-slate prose-sm max-w-none dark:prose-invert">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{result.ideal_candidate_profile}</ReactMarkdown>
               </div>
             )}

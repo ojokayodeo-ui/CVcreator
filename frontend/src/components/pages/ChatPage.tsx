@@ -81,7 +81,7 @@ export default function ChatPage() {
                 {m.role === "user" ? (
                   <p className="whitespace-pre-wrap">{m.content}</p>
                 ) : (
-                  <div className="prose prose-slate prose-sm max-w-none">
+                  <div className="prose prose-slate prose-sm max-w-none dark:prose-invert">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content}</ReactMarkdown>
                   </div>
                 )}

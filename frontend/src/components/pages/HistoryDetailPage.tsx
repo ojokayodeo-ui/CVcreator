@@ -45,7 +45,7 @@ export default function HistoryDetailPage() {
         ))}
       </div>
 
-      <div className="card p-6 prose prose-slate prose-sm max-w-none">
+      <div className="card p-6 prose prose-slate prose-sm max-w-none dark:prose-invert">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>
           {activeTab === "cv" ? item.outputs?.optimised_cv : activeTab === "cover" ? item.outputs?.cover_letter : activeTab === "strategy" ? item.outputs?.strategy_plan : item.outputs?.ideal_candidate_profile}
         </ReactMarkdown>
