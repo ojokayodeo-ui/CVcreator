@@ -7,6 +7,7 @@ import HistoryDetailPage from "./components/pages/HistoryDetailPage";
 import SettingsPage from "./components/pages/SettingsPage";
 import ChatPage from "./components/pages/ChatPage";
 import JobSearchPage from "./components/pages/JobSearchPage";
+import TrackerPage from "./components/pages/TrackerPage";
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/history/:id" element={<HistoryDetailPage />} />
           <Route path="/search" element={<JobSearchPage />} />
+          <Route path="/tracker" element={<TrackerPage />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>

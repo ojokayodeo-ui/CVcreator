@@ -59,6 +59,27 @@ create table if not exists chat_messages (
   created_at timestamptz default now()
 );
 
+-- Job application tracker
+create table if not exists job_tracker (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references users(id) on delete cascade,
+  job_title text not null,
+  company text not null,
+  location text default '',
+  job_url text default '',
+  stage text not null default 'saved',
+  notes text default '',
+  applied_date date,
+  next_action text default '',
+  next_date date,
+  salary text default '',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table job_tracker enable row level security;
+create policy "Service role full access" on job_tracker using (true) with check (true);
+
 -- Google Drive OAuth tokens
 create table if not exists drive_tokens (
   id uuid primary key default gen_random_uuid(),

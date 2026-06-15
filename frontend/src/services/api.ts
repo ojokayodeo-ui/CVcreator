@@ -56,6 +56,12 @@ export const downloadCoverLetter = (jobId: string) =>
 export const getChatHistory = () => api.get("/chat/history");
 export const sendChatMessage = (message: string) => api.post("/chat/message", { message });
 
+// Job Application Tracker
+export const getApplications = () => api.get("/tracker");
+export const createApplication = (data: object) => api.post("/tracker", data);
+export const updateApplication = (id: string, data: object) => api.patch(`/tracker/${id}`, data);
+export const deleteApplication = (id: string) => api.delete(`/tracker/${id}`);
+
 // Drive
 export const getDriveAuthUrl = () => api.get("/drive/auth");
 export const getDriveStatus = () => api.get("/drive/status");

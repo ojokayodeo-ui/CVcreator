@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .core.config import get_settings
 from .core.database import get_db
 from .api.deps import SINGLE_USER_ID
-from .api.routes import cv, jobs, drive, download, chat
+from .api.routes import cv, jobs, drive, download, chat, tracker
 
 
 @asynccontextmanager
@@ -41,6 +41,7 @@ app.include_router(jobs.router)
 app.include_router(drive.router)
 app.include_router(download.router)
 app.include_router(chat.router)
+app.include_router(tracker.router)
 
 
 @app.get("/health")
