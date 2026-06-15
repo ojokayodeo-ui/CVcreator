@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { generateDocuments, downloadCV, downloadCoverLetter, triggerDownload } from "../../services/api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -10,7 +11,8 @@ import {
 type Tab = "cv" | "cover" | "match" | "strategy" | "questions" | "ideal";
 
 export default function DashboardPage() {
-  const [jobUrl, setJobUrl] = useState("");
+  const [searchParams] = useSearchParams();
+  const [jobUrl, setJobUrl] = useState(searchParams.get("jobUrl") || "");
   const [manualDesc, setManualDesc] = useState("");
   const [showManual, setShowManual] = useState(false);
   const [loading, setLoading] = useState(false);

@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     google_client_secret: str = ""
     google_redirect_uri: str = "http://localhost:8000/auth/google/callback"
 
+    adzuna_app_id: str = ""
+    adzuna_app_key: str = ""
+
     frontend_url: str = "http://localhost:3000"
     allowed_origins: str = "http://localhost:3000"
 

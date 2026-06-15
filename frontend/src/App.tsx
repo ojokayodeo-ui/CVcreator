@@ -6,6 +6,7 @@ import HistoryPage from "./components/pages/HistoryPage";
 import HistoryDetailPage from "./components/pages/HistoryDetailPage";
 import SettingsPage from "./components/pages/SettingsPage";
 import ChatPage from "./components/pages/ChatPage";
+import JobSearchPage from "./components/pages/JobSearchPage";
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
           <Route path="/persona" element={<PersonaPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/history/:id" element={<HistoryDetailPage />} />
+          <Route path="/search" element={<JobSearchPage />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>

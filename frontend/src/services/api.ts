@@ -28,6 +28,10 @@ export const generateDocuments = (payload: {
   save_to_drive?: boolean;
 }) => api.post("/jobs/generate", payload);
 
+export const getSearchCountries = () => api.get("/jobs/search/countries");
+export const searchJobs = (keyword: string, country: string, location: string, page = 1) =>
+  api.get("/jobs/search", { params: { keyword, country, location, page } });
+
 export const getHistory = () => api.get("/jobs/history");
 export const getHistoryItem = (id: string) => api.get(`/jobs/history/${id}`);
 

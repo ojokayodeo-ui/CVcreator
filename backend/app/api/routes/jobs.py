@@ -2,6 +2,7 @@ import asyncio
 from fastapi import APIRouter, HTTPException, Depends
 from ...models.schemas import JobAnalysisRequest, GenerateRequest, GeneratedDocuments
 from ...services.scraper import scrape_job_page
+from ...services.job_search import search_jobs, SUPPORTED_COUNTRIES
 from ...services.ai_engine import (
     analyse_job,
     calculate_match,
@@ -16,6 +17,28 @@ from ..deps import get_current_user_id
 import uuid
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
+
+
+@router.get("/search/countries")
+async def get_search_countries():
+    return [{"code": code, "name": name} for code, name in SUPPORTED_COUNTRIES.items()]
+
+
+@router.get("/search")
+async def search_job_vacancies(
+    keyword: str,
+    country: str = "gb",
+    location: str = "",
+    page: int = 1,
+    user_id: str = Depends(get_current_user_id),
+):
+    """Search live job vacancies by keyword, country and location."""
+    try:
+        return await search_jobs(keyword=keyword, country=country, location=location, page=page)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Job search failed: {e}")
 
 
 @router.post("/analyze")
