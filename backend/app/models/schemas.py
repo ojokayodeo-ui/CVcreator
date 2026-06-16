@@ -86,6 +86,9 @@ class GeneratedDocuments(BaseModel):
 
 class ChatMessageRequest(BaseModel):
     message: str
+    conversation_id: Optional[str] = None
+    image_base64: Optional[str] = None
+    image_media_type: Optional[str] = None  # image/jpeg, image/png, image/webp, image/gif
 
 
 class ChatMessageResponse(BaseModel):

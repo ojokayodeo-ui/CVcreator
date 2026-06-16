@@ -53,8 +53,23 @@ export const downloadCoverLetter = (jobId: string) =>
   api.get(`/download/${jobId}/cover-letter`, { responseType: "blob" });
 
 // Career Advisor Chat
-export const getChatHistory = () => api.get("/chat/history");
-export const sendChatMessage = (message: string) => api.post("/chat/message", { message });
+export const getConversations = () => api.get("/chat/conversations");
+export const createConversation = () => api.post("/chat/conversations");
+export const deleteConversation = (id: string) => api.delete(`/chat/conversations/${id}`);
+export const getChatHistory = (conversationId: string) =>
+  api.get("/chat/history", { params: { conversation_id: conversationId } });
+export const sendChatMessage = (
+  conversationId: string,
+  message: string,
+  imageBase64?: string,
+  imageMediaType?: string,
+) =>
+  api.post("/chat/message", {
+    conversation_id: conversationId,
+    message,
+    image_base64: imageBase64,
+    image_media_type: imageMediaType,
+  });
 
 // Job Application Tracker
 export const getApplications = () => api.get("/tracker");

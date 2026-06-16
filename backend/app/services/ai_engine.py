@@ -105,14 +105,36 @@ async def generate_application_helper(persona: dict, job: dict, match: dict) -> 
     return _parse_json(result)
 
 
-async def career_advisor_reply(persona: dict, history: list[dict], message: str) -> str:
+async def career_advisor_reply(
+    persona: dict,
+    history: list[dict],
+    message: str,
+    image_base64: str | None = None,
+    image_media_type: str | None = None,
+) -> str:
     """Continue a career-advice conversation, grounded in the user's persona."""
     client = get_ai_client()
     settings = get_settings()
     system = CAREER_ADVISOR_SYSTEM_PROMPT.format(persona_json=json.dumps(persona, indent=2))
 
     messages = [{"role": m["role"], "content": m["content"]} for m in history]
-    messages.append({"role": "user", "content": message})
+
+    if image_base64 and image_media_type:
+        user_content = [
+            {
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": image_media_type,
+                    "data": image_base64,
+                },
+            },
+            {"type": "text", "text": message},
+        ]
+    else:
+        user_content = message
+
+    messages.append({"role": "user", "content": user_content})
 
     response = await client.messages.create(
         model=settings.anthropic_model,

@@ -3,17 +3,53 @@ from ...services.ai_engine import career_advisor_reply
 from ...models.schemas import ChatMessageRequest
 from ...core.database import get_db
 from ..deps import get_current_user_id
+import uuid
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 
+@router.get("/conversations")
+async def list_conversations(user_id: str = Depends(get_current_user_id)):
+    db = get_db()
+    result = (
+        db.table("chat_conversations")
+        .select("id,title,created_at,updated_at")
+        .eq("user_id", user_id)
+        .order("updated_at", desc=True)
+        .execute()
+    )
+    return result.data
+
+
+@router.post("/conversations")
+async def create_conversation(user_id: str = Depends(get_current_user_id)):
+    db = get_db()
+    result = db.table("chat_conversations").insert({
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "title": "New conversation",
+    }).execute()
+    return result.data[0]
+
+
+@router.delete("/conversations/{conv_id}")
+async def delete_conversation(conv_id: str, user_id: str = Depends(get_current_user_id)):
+    db = get_db()
+    db.table("chat_conversations").delete().eq("id", conv_id).eq("user_id", user_id).execute()
+    return {"ok": True}
+
+
 @router.get("/history")
-async def get_chat_history(user_id: str = Depends(get_current_user_id)):
+async def get_chat_history(
+    conversation_id: str,
+    user_id: str = Depends(get_current_user_id),
+):
     db = get_db()
     result = (
         db.table("chat_messages")
-        .select("role,content,created_at")
+        .select("role,content,image_data,created_at")
         .eq("user_id", user_id)
+        .eq("conversation_id", conversation_id)
         .order("created_at")
         .execute()
     )
@@ -27,6 +63,14 @@ async def send_chat_message(
 ):
     db = get_db()
 
+    if not payload.conversation_id:
+        raise HTTPException(status_code=400, detail="conversation_id is required")
+
+    # Verify conversation belongs to user
+    conv = db.table("chat_conversations").select("id").eq("id", payload.conversation_id).eq("user_id", user_id).execute()
+    if not conv.data:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
     persona_result = db.table("personas").select("*").eq("user_id", user_id).execute()
     if not persona_result.data:
         raise HTTPException(status_code=404, detail="No persona found — upload a CV first")
@@ -36,16 +80,43 @@ async def send_chat_message(
         db.table("chat_messages")
         .select("role,content")
         .eq("user_id", user_id)
+        .eq("conversation_id", payload.conversation_id)
         .order("created_at")
         .execute()
     )
     history = history_result.data
 
-    reply = await career_advisor_reply(persona, history, payload.message)
+    reply = await career_advisor_reply(
+        persona,
+        history,
+        payload.message,
+        image_base64=payload.image_base64,
+        image_media_type=payload.image_media_type,
+    )
+
+    # Auto-title conversation from first user message (truncated)
+    if not history:
+        title = payload.message[:60] + ("..." if len(payload.message) > 60 else "")
+        db.table("chat_conversations").update({"title": title, "updated_at": "now()"}).eq("id", payload.conversation_id).execute()
+    else:
+        db.table("chat_conversations").update({"updated_at": "now()"}).eq("id", payload.conversation_id).execute()
+
+    user_image_display = payload.image_base64 if payload.image_base64 else None
 
     db.table("chat_messages").insert([
-        {"user_id": user_id, "role": "user", "content": payload.message},
-        {"user_id": user_id, "role": "assistant", "content": reply},
+        {
+            "user_id": user_id,
+            "role": "user",
+            "content": payload.message,
+            "conversation_id": payload.conversation_id,
+            "image_data": user_image_display,
+        },
+        {
+            "user_id": user_id,
+            "role": "assistant",
+            "content": reply,
+            "conversation_id": payload.conversation_id,
+        },
     ]).execute()
 
     return {"role": "assistant", "content": reply}
