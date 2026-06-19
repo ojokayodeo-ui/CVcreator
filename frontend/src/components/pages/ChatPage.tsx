@@ -75,9 +75,7 @@ export default function ChatPage() {
     }
   }
 
-  const handleImagePick = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const processImageFile = useCallback((file: File) => {
     if (!ALLOWED_TYPES.includes(file.type)) {
       setError("Only JPEG, PNG, WebP or GIF images are supported.");
       return;
@@ -89,8 +87,29 @@ export default function ChatPage() {
       setImage({ base64, mediaType: file.type, preview: dataUrl });
     };
     reader.readAsDataURL(file);
-    e.target.value = "";
   }, []);
+
+  const handleImagePick = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processImageFile(file);
+    e.target.value = "";
+  }, [processImageFile]);
+
+  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLInputElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type.startsWith("image/")) {
+        const file = item.getAsFile();
+        if (file) {
+          e.preventDefault();
+          processImageFile(file);
+        }
+        break;
+      }
+    }
+  }, [processImageFile]);
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
@@ -293,6 +312,7 @@ export default function ChatPage() {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask about job fit, skills, strategy — or share a screenshot..."
                 disabled={loading}
+                onPaste={handlePaste}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
