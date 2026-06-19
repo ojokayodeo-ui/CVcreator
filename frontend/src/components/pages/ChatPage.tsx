@@ -75,6 +75,8 @@ export default function ChatPage() {
     }
   }
 
+  const MAX_DIMENSION = 1568;
+
   const processImageFile = useCallback((file: File) => {
     if (!ALLOWED_TYPES.includes(file.type)) {
       setError("Only JPEG, PNG, WebP or GIF images are supported.");
@@ -83,8 +85,38 @@ export default function ChatPage() {
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;
-      const base64 = dataUrl.split(",")[1];
-      setImage({ base64, mediaType: file.type, preview: dataUrl });
+
+      // GIFs can be animated; resizing via canvas would flatten them, so send as-is.
+      if (file.type === "image/gif") {
+        setImage({ base64: dataUrl.split(",")[1], mediaType: file.type, preview: dataUrl });
+        return;
+      }
+
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+          const scale = MAX_DIMENSION / Math.max(width, height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          setImage({ base64: dataUrl.split(",")[1], mediaType: file.type, preview: dataUrl });
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        const outType = file.type === "image/png" ? "image/png" : "image/jpeg";
+        const resizedDataUrl = canvas.toDataURL(outType, 0.85);
+        setImage({ base64: resizedDataUrl.split(",")[1], mediaType: outType, preview: resizedDataUrl });
+      };
+      img.onerror = () => {
+        setImage({ base64: dataUrl.split(",")[1], mediaType: file.type, preview: dataUrl });
+      };
+      img.src = dataUrl;
     };
     reader.readAsDataURL(file);
   }, []);

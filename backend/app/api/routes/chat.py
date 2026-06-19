@@ -1,10 +1,13 @@
 from fastapi import APIRouter, HTTPException, Depends
+from anthropic import APIStatusError
 from ...services.ai_engine import career_advisor_reply
 from ...models.schemas import ChatMessageRequest
 from ...core.database import get_db
 from ..deps import get_current_user_id
+import logging
 import uuid
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 
@@ -86,13 +89,20 @@ async def send_chat_message(
     )
     history = history_result.data
 
-    reply = await career_advisor_reply(
-        persona,
-        history,
-        payload.message,
-        image_base64=payload.image_base64,
-        image_media_type=payload.image_media_type,
-    )
+    try:
+        reply = await career_advisor_reply(
+            persona,
+            history,
+            payload.message,
+            image_base64=payload.image_base64,
+            image_media_type=payload.image_media_type,
+        )
+    except APIStatusError as e:
+        logger.exception("Anthropic API error in career_advisor_reply")
+        detail = getattr(e, "message", str(e))
+        if isinstance(e.body, dict):
+            detail = e.body.get("error", {}).get("message", detail)
+        raise HTTPException(status_code=502, detail=f"AI service error: {detail}")
 
     # Auto-title conversation from first user message (truncated)
     if not history:
