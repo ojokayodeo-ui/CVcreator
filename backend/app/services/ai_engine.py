@@ -117,7 +117,10 @@ async def career_advisor_reply(
     settings = get_settings()
     system = CAREER_ADVISOR_SYSTEM_PROMPT.format(persona_json=json.dumps(persona, indent=2))
 
-    messages = [{"role": m["role"], "content": m["content"]} for m in history]
+    messages = [
+        {"role": m["role"], "content": m["content"] if m["content"].strip() else "[Image attached]"}
+        for m in history
+    ]
 
     if image_base64 and image_media_type:
         user_content = [
@@ -129,8 +132,11 @@ async def career_advisor_reply(
                     "data": image_base64,
                 },
             },
-            {"type": "text", "text": message},
         ]
+        if message.strip():
+            user_content.append({"type": "text", "text": message})
+        else:
+            user_content.append({"type": "text", "text": "What do you make of this image?"})
     else:
         user_content = message
 
