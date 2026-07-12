@@ -22,7 +22,6 @@ export default function PersonaPage() {
     basics: true, summary: true, skills: true, experience: true, education: true, achievements: true,
   });
 
-  // Load persona from Supabase on mount; restore in-progress review from localStorage
   useEffect(() => {
     const savedReview = (() => {
       try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "null"); } catch { return null; }
@@ -39,7 +38,6 @@ export default function PersonaPage() {
       .catch(() => setStep("upload"));
   }, []);
 
-  // Persist in-progress review to localStorage
   useEffect(() => {
     if (step === "review") {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ step, persona }));
@@ -92,12 +90,10 @@ export default function PersonaPage() {
     setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
   }
 
-  // ── Loading ────────────────────────────────────────────────────────────────
   if (step === "loading") {
     return <div className="text-slate-400 text-sm">Loading your profile...</div>;
   }
 
-  // ── Upload prompt ──────────────────────────────────────────────────────────
   if (step === "upload") {
     return (
       <div className="max-w-2xl mx-auto">
@@ -128,7 +124,6 @@ export default function PersonaPage() {
     );
   }
 
-  // ── Review (post-upload, before save) ─────────────────────────────────────
   if (step === "review") {
     return (
       <PersonaForm
@@ -145,10 +140,8 @@ export default function PersonaPage() {
     );
   }
 
-  // ── Saved profile view ─────────────────────────────────────────────────────
   return (
     <div className="max-w-2xl mx-auto">
-      {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -210,7 +203,6 @@ export default function PersonaPage() {
         />
       ) : (
         <div className="space-y-4">
-          {/* Basic info */}
           <Section title="Basic Information" sectionKey="basics" expanded={expandedSections.basics} onToggle={toggleSection}>
             <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
               {[
@@ -229,14 +221,12 @@ export default function PersonaPage() {
             </dl>
           </Section>
 
-          {/* Summary */}
           {persona.summary && (
             <Section title="Professional Summary" sectionKey="summary" expanded={expandedSections.summary} onToggle={toggleSection}>
               <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed">{persona.summary}</p>
             </Section>
           )}
 
-          {/* Skills */}
           {persona.skills?.length > 0 && (
             <Section title="Skills" sectionKey="skills" expanded={expandedSections.skills} onToggle={toggleSection}>
               <div className="flex flex-wrap gap-1.5">
@@ -249,7 +239,6 @@ export default function PersonaPage() {
             </Section>
           )}
 
-          {/* Experience */}
           {persona.experience?.length > 0 && (
             <Section title="Work Experience" sectionKey="experience" expanded={expandedSections.experience} onToggle={toggleSection}>
               <div className="space-y-4">
@@ -273,7 +262,6 @@ export default function PersonaPage() {
             </Section>
           )}
 
-          {/* Education */}
           {persona.education?.length > 0 && (
             <Section title="Education" sectionKey="education" expanded={expandedSections.education} onToggle={toggleSection}>
               <div className="space-y-3">
@@ -289,7 +277,6 @@ export default function PersonaPage() {
             </Section>
           )}
 
-          {/* Achievements */}
           {persona.achievements?.length > 0 && (
             <Section title="Achievements" sectionKey="achievements" expanded={expandedSections.achievements} onToggle={toggleSection}>
               <ul className="space-y-1">
@@ -303,7 +290,6 @@ export default function PersonaPage() {
             </Section>
           )}
 
-          {/* Certifications */}
           {persona.certifications?.length > 0 && (
             <Section title="Certifications" sectionKey="certs" expanded={expandedSections.certs ?? true} onToggle={toggleSection}>
               <ul className="space-y-1">
@@ -317,7 +303,6 @@ export default function PersonaPage() {
             </Section>
           )}
 
-          {/* Re-upload zone */}
           <div className="pt-2">
             <p className="text-xs text-slate-400 mb-2">Upload a new CV to replace this profile:</p>
             <div
@@ -338,7 +323,6 @@ export default function PersonaPage() {
   );
 }
 
-// ── Collapsible section wrapper ──────────────────────────────────────────────
 function Section({
   title, sectionKey, expanded, onToggle, children,
 }: {
@@ -358,7 +342,6 @@ function Section({
   );
 }
 
-// ── Persona edit form (shared by review and edit-in-place) ───────────────────
 function PersonaForm({
   persona, setPersona, saving, error, onSave, onBack, title, subtitle, saveLabel, inlineMode = false,
 }: {
@@ -399,7 +382,6 @@ function PersonaForm({
       )}
 
       <div className="space-y-6">
-        {/* Basic fields */}
         <div className="card p-4 space-y-3">
           <h2 className="font-semibold text-slate-700 dark:text-slate-200 text-sm">Basic Information</h2>
           {[
@@ -420,7 +402,6 @@ function PersonaForm({
           ))}
         </div>
 
-        {/* Summary */}
         <div className="card p-4">
           <h2 className="font-semibold text-slate-700 dark:text-slate-200 text-sm mb-2">Professional Summary</h2>
           <textarea
@@ -430,7 +411,6 @@ function PersonaForm({
           />
         </div>
 
-        {/* Skills */}
         <div className="card p-4">
           <h2 className="font-semibold text-slate-700 dark:text-slate-200 text-sm mb-2">Skills</h2>
           <input
@@ -443,7 +423,6 @@ function PersonaForm({
           />
         </div>
 
-        {/* Experience */}
         <div className="card p-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold text-slate-700 dark:text-slate-200 text-sm">Work Experience</h2>
@@ -499,7 +478,6 @@ function PersonaForm({
           </div>
         </div>
 
-        {/* Education */}
         <div className="card p-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold text-slate-700 dark:text-slate-200 text-sm">Education</h2>
@@ -551,7 +529,6 @@ function PersonaForm({
           </div>
         </div>
 
-        {/* Achievements */}
         <div className="card p-4">
           <div className="flex items-center justify-between mb-2">
             <h2 className="font-semibold text-slate-700 dark:text-slate-200 text-sm">Achievements</h2>
@@ -587,7 +564,6 @@ function PersonaForm({
           </div>
         </div>
 
-        {/* Certifications */}
         <div className="card p-4">
           <div className="flex items-center justify-between mb-2">
             <h2 className="font-semibold text-slate-700 dark:text-slate-200 text-sm">Certifications</h2>
