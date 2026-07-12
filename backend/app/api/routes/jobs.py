@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from fastapi import APIRouter, HTTPException, Depends
 from ...models.schemas import JobAnalysisRequest, GenerateRequest, GeneratedDocuments
 from ...services.scraper import scrape_job_page
@@ -17,6 +18,7 @@ from ...core.database import get_db
 from ..deps import get_current_user_id
 import uuid
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
 
@@ -90,7 +92,7 @@ async def generate_documents(
     payload: GenerateRequest,
     user_id: str = Depends(get_current_user_id),
 ):
-    """Full pipeline: scrape → analyse → match → generate CV + cover letter + strategy."""
+    """Full pipeline: scrape -> analyse -> match -> generate CV + cover letter + strategy."""
     db = get_db()
 
     # Load persona
@@ -99,8 +101,7 @@ async def generate_documents(
         raise HTTPException(status_code=404, detail="No persona found. Upload your CV first.")
     persona = persona_result.data[0]
 
-    # Scrape / load job — scrape for the full posting, falling back to a manually
-    # supplied (or search-result) description if scraping fails or is blocked.
+    # Scrape / load job
     job_text = None
     if payload.job_url:
         job_text = await scrape_job_page(payload.job_url)
@@ -109,27 +110,44 @@ async def generate_documents(
     if not job_text:
         raise HTTPException(status_code=422, detail="Job scraping failed. Paste the description manually.")
 
-    # AI pipeline — run independent steps concurrently where possible
-    job_data = await analyse_job(job_text)
+    # AI pipeline
+    try:
+        job_data = await analyse_job(job_text)
+    except Exception as e:
+        logger.exception("Job analysis failed")
+        raise HTTPException(status_code=502, detail=f"Job analysis failed: {e}")
     job_data["source_url"] = payload.job_url
-    match = await calculate_match(persona, job_data)
+
+    try:
+        match = await calculate_match(persona, job_data)
+    except Exception as e:
+        logger.exception("Match calculation failed")
+        raise HTTPException(status_code=502, detail=f"Match calculation failed: {e}")
 
     tasks = []
+    task_keys = []
     if payload.generate_cv:
-        tasks.append(generate_optimised_cv(persona, job_data, match))
+        tasks.append(generate_optimised_cv(persona, job_data, match)); task_keys.append("cv")
     if payload.generate_cover_letter:
-        tasks.append(generate_cover_letter(persona, job_data, match.get("overall_score", 70)))
+        tasks.append(generate_cover_letter(persona, job_data, match.get("overall_score", 70))); task_keys.append("cover")
     if payload.generate_strategy:
-        tasks.append(generate_strategy(persona, job_data, match))
+        tasks.append(generate_strategy(persona, job_data, match)); task_keys.append("strategy")
     if payload.generate_application_helper:
-        tasks.append(generate_application_helper(persona, job_data, match))
+        tasks.append(generate_application_helper(persona, job_data, match)); task_keys.append("helper")
 
-    results = await asyncio.gather(*tasks)
-    result_iter = iter(results)
-    optimised_cv = next(result_iter) if payload.generate_cv else ""
-    cover_letter = next(result_iter) if payload.generate_cover_letter else ""
-    strategy_data = next(result_iter) if payload.generate_strategy else {}
-    application_helper = next(result_iter) if payload.generate_application_helper else {}
+    raw_results = await asyncio.gather(*tasks, return_exceptions=True)
+    task_results = {}
+    for key, res in zip(task_keys, raw_results):
+        if isinstance(res, Exception):
+            logger.error("Task %s failed: %s", key, res)
+            task_results[key] = "" if key in ("cv", "cover") else {}
+        else:
+            task_results[key] = res
+
+    optimised_cv = task_results.get("cv", "")
+    cover_letter = task_results.get("cover", "")
+    strategy_data = task_results.get("strategy", {})
+    application_helper = task_results.get("helper", {})
 
     drive_url = None
     if payload.save_to_drive:

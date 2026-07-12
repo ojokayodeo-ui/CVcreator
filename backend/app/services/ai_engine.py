@@ -39,11 +39,24 @@ async def _chat(prompt: str, json_mode: bool = False) -> str:
     return text.strip()
 
 
-def _parse_json(text: str) -> dict:
-    """Extract JSON from response, stripping markdown fences if present."""
-    text = re.sub(r"^```(?:json)?\s*", "", text)
-    text = re.sub(r"\s*```$", "", text)
-    return json.loads(text)
+def _parse_json(text: str, fallback: dict | None = None) -> dict:
+    """Extract JSON from response, stripping markdown fences and leading/trailing prose."""
+    try:
+        text = re.sub(r"^```(?:json)?\s*", "", text.strip(), flags=re.MULTILINE)
+        text = re.sub(r"\s*```$", "", text.strip(), flags=re.MULTILINE)
+        # Find the first { or [ and last } or ] to handle leading/trailing prose
+        start = min(
+            (text.find("{") if "{" in text else len(text)),
+            (text.find("[") if "[" in text else len(text)),
+        )
+        end = max(text.rfind("}"), text.rfind("]")) + 1
+        if start < end:
+            text = text[start:end]
+        return json.loads(text)
+    except (json.JSONDecodeError, ValueError):
+        if fallback is not None:
+            return fallback
+        raise
 
 
 async def extract_persona_from_cv(cv_text: str) -> dict:
@@ -92,7 +105,7 @@ async def generate_strategy(persona: dict, job: dict, match: dict) -> dict:
         match_json=json.dumps(match, indent=2),
     )
     result = await _chat(prompt, json_mode=True)
-    return _parse_json(result)
+    return _parse_json(result, fallback={})
 
 
 async def generate_application_helper(persona: dict, job: dict, match: dict) -> dict:
@@ -102,7 +115,7 @@ async def generate_application_helper(persona: dict, job: dict, match: dict) -> 
         match_json=json.dumps(match, indent=2),
     )
     result = await _chat(prompt, json_mode=True)
-    return _parse_json(result)
+    return _parse_json(result, fallback={})
 
 
 async def career_advisor_reply(
